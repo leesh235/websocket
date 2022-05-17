@@ -1,2 +1,2 @@
-# websoket
-This is for websoket practice.
+# websocket
+This is for websocket practice.
