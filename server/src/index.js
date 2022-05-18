@@ -15,26 +15,24 @@ async function startServer() {
     io.on("connection", (socket) => {
         console.log("connection");
 
-        socket.on("roomjoin", (roomName) => {
-            console.log(`in room : ${roomName}}`);
-            socket.join(roomName, () => {
-                io.to(roomName).emit("roomjoin", roomName);
-            });
+        socket.on("roomjoin", (roomName, userName) => {
+            console.log(`in room`);
+            socket.join(roomName);
+            io.to(roomName).emit("join", roomName, userName);
         });
 
-        socket.on("leaveroom", (roonName) => {
+        socket.on("leaveroom", (roomName, userName) => {
             console.log("out room");
-            socket.leave(roonName, () => {
-                io.to(roonName).emit("leaveroom", roonName);
-            });
+            socket.leave(roomName);
+            io.to(roomName).emit("leave", roomName, userName);
+        });
+
+        socket.on("chat", (roomName, userName, msg) => {
+            io.to(roomName).emit("chat2", userName, msg);
         });
 
         socket.on("disconnect", () => {
             console.log("disconnect");
-        });
-
-        socket.on("chat", (roonName, userName, msg) => {
-            io.to(roonName).emit("chat", userName, msg);
         });
     });
 
