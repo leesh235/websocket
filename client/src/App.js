@@ -1,13 +1,14 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { UserOne } from "./pages/UserOne";
-import { UserTwo } from "./pages/UserTwo";
+import { ChatList } from "./pages/ChatList";
+import { ChatRoom } from "./pages/ChatRoom";
 
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/user1" element={UserOne} />
-                <Route path="/user2" element={UserTwo} />
+                <Route path="/" element={<ChatList />} />
+                <Route path="/room1" element={<ChatRoom />} />
+                <Route path="/room2" element={<ChatRoom />} />
             </Routes>
         </Router>
     );
