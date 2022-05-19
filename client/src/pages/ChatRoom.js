@@ -1,9 +1,8 @@
-import { io } from "socket.io-client";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import styled from "styled-components";
-
-const socket = io.connect("http://localhost:5000/");
+import { response, request, event } from "../utils/socket";
+import { createDom } from "../utils/domUtils";
 
 const Wrapper = styled.main`
     width: 30%;
@@ -54,37 +53,25 @@ export const ChatRoom = () => {
     const { state } = useLocation();
     const { userName, room } = state;
 
-    const [chat, setChat] = useState([]);
-
     const handleOnClick = () => {
-        socket.emit("leaveroom", room, userName);
-
+        //방 나가기
+        request(event.leave, { room, name: userName });
         navigation("/");
     };
 
     const handleOnSubmit = (e) => {
         e.preventDefault();
         const { value } = e.target.chatInput;
-        socket.emit("chat", room, userName, value);
-    };
-
-    const createDom = (data) => {
-        let list = document.getElementById("chatList");
-        let item = document.createElement("div");
-        item.innerText = data;
-        list.appendChild(item);
+        //채팅
+        request(event.chat, { msg: value });
     };
 
     useEffect(() => {
-        socket.emit("roomjoin", room, userName);
-        socket.on("join", (room, name) => {
-            createDom(`${room}에 ${name}님이 입장하셨습니다.`);
-        });
-        socket.on("chat2", (name, msg) => {
-            createDom(`${name}: ${msg}`);
-        });
-        socket.on("leave", (room, name) => {
-            createDom(`${room}에서 ${name}님이 나가셨습니다.`);
+        //방 입장
+        request(event.join, { room, name: userName });
+        //해당 request에 대한 response
+        response(event.message, (data) => {
+            createDom("chatList", "div", data);
         });
     }, []);
 
