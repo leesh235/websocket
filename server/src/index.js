@@ -5,6 +5,8 @@ import { Server } from "socket.io";
 
 const port = 5000;
 
+let users = [];
+
 async function startServer() {
     const app = express();
     const server = http.Server(app);
@@ -12,23 +14,53 @@ async function startServer() {
 
     await loaders(app);
 
+    //연결
     io.on("connection", (socket) => {
         console.log("connection");
 
-        socket.on("roomjoin", (roomName, userName) => {
+        //방 입장
+        socket.on("roomjoin", ({ room, name }) => {
             console.log(`in room`);
-            socket.join(roomName);
-            io.to(roomName).emit("join", roomName, userName);
+
+            const user = users.filter((data) => {
+                return data.id === socket.id;
+            });
+            if (user.length === 0) {
+                users.push({ id: socket.id, name, room });
+
+                //방 인원들에게 메세지 전달
+                io.to(room).emit(
+                    "message",
+                    `${room}에 ${name}님이 입장하셨습니다.`
+                );
+                socket.join(room);
+            }
         });
 
-        socket.on("leaveroom", (roomName, userName) => {
+        //방 나감
+        socket.on("leaveroom", ({ room, name }) => {
             console.log("out room");
-            socket.leave(roomName);
-            io.to(roomName).emit("leave", roomName, userName);
+
+            users = users.filter((data) => {
+                return data.name !== name;
+            });
+            //방 인원들에게 메세지 전달
+            io.to(room).emit(
+                "message",
+                `${room}에서 ${name}님이 나가셨습니다.`
+            );
+            socket.leave(room);
         });
 
-        socket.on("chat", (roomName, userName, msg) => {
-            io.to(roomName).emit("chat2", userName, msg);
+        //채팅
+        socket.on("chat", ({ msg }) => {
+            console.log("chat");
+
+            const user = users.filter((data) => {
+                return data.id === socket.id;
+            });
+            //방 인원들에게 해당 채팅 전달
+            io.to(user[0].room).emit("message", `${user[0].name}: ${msg}`);
         });
 
         socket.on("disconnect", () => {
